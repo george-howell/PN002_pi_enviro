@@ -14,56 +14,6 @@ from luma.core.render import canvas
 
 # FUNCTIONS ####################################################################
 
-# displays the current time, and pasues execution untill interval reached
-# def dispUpdate(timeData, tempFmt, humidFmt):
-
-#     # reading interval length (min)
-#     intLen = 5
-
-#     # last time sec
-#     lastTimeSec = 0
-
-#     # gets the current minute reading
-#     timeStamp = dt.datetime.now()
-#     timeStampMin = int(timeStamp.strftime("%M"))
-
-#     # calculates the next minute reading
-#     nxtTimeStamp = timeStampMin + intLen
-#     if nxtTimeStamp > 59:
-#         nxtTimeStamp = nxtTimeStamp - 60 
-
-#     # last time / temp / humid readings
-#     lstRdTime = timeData.strftime("%H:%M")
-#     lstRdTemp = str(np.around(tempFmt, decimals=1))  
-#     lstRdHumid = str(np.around(humidFmt, decimals=1)) 
-
-#     # while loop that prints the current time, exits
-#     # when the interval is up
-#     while timeStampMin != nxtTimeStamp: 
-
-#         # keeps getting the current minute reading
-#         timeStamp = dt.datetime.now()
-#         timeStampMin = int(timeStamp.strftime("%M"))
-
-#         # formats time and date for the display
-#         dispTimeFmt = timeStamp.strftime("%H:%M:%S")
-#         dispDateFmt = timeStamp.strftime("%d %b %y")
-
-#         timeStampSec = int(timeStamp.strftime("%S"))
-
-#         # only updates oled when delta time = 1s
-#         if timeStampSec != lastTimeSec:
-#             lastTimeSec = timeStampSec          
-            
-#             with canvas(device) as draw:
-#                 draw.text((1, 0), "Date:  " + dispDateFmt, fill="yellow")
-#                 draw.text((1, 9), "Time:  " + dispTimeFmt, fill="yellow") 
-#                 draw.text((32, 24), "Last Reading", fill="yellow")
-#                 draw.text((1, 35), "Time:  " + lstRdTime, fill="yellow")
-#                 draw.text((1, 44), "Temp:  " + lstRdTemp + " degC", fill="yellow")
-#                 draw.text((1, 53), "Humid: " + lstRdHumid + " %", fill="yellow") 
-
-
 # read temp and humidity from SHT-21
 def readSht21():
 
@@ -86,6 +36,7 @@ def readSht21():
 
     return (tempData, humidData)
 
+# update oled display
 def dispRefresh(timeStamp, lstRdTime, lstRdTemp, lstRdHumid):
 
     # formats time and date for the display
@@ -101,81 +52,65 @@ def dispRefresh(timeStamp, lstRdTime, lstRdTemp, lstRdHumid):
         draw.text((1, 53), "Humid: " + lstRdHumid + " %", fill="yellow")
 
 
-# # plot data
-# def plotData(fig, axes, timeArr, tempArr, humidArr): 
+# plot data
+def plotData(fig, axes, timeArr, tempArr, humidArr): 
 
-#     # clears the data on each axis
-#     axes[0].clear()
-#     axes[1].clear()
+    # clears the data on each axis
+    axes[0].clear()
+    axes[1].clear()
     
-#     # plots data to each axes
-#     axes[0].plot(timeArr, tempArr)
-#     axes[1].plot(timeArr, humidArr)
+    # plots data to each axes
+    axes[0].plot(timeArr, tempArr)
+    axes[1].plot(timeArr, humidArr)
 
-#     # temp plot labels
-#     axes[0].set_title('Temperature')
-#     axes[0].set_ylabel('Temp [degC]')
+    # temp plot labels
+    axes[0].set_title('Temperature')
+    axes[0].set_ylabel('Temp [degC]')
 
-#     # humid plot labels
-#     axes[1].set_title('Humidity')
-#     axes[1].set_xlabel('Date-Time')
-#     axes[1].set_ylabel('RH [%]')
+    # humid plot labels
+    axes[1].set_title('Humidity')
+    axes[1].set_xlabel('Date-Time')
+    axes[1].set_ylabel('RH [%]')
 
-#     # grid
-#     axes[0].grid()
-#     axes[1].grid()
+    # grid
+    axes[0].grid()
+    axes[1].grid()
 
-#     # update the plot and pause for x seconds
-#     plt.pause(0.01)
-
-
-# convert data to a better format and then print to display
-# def fmtData(timeVal, tempVal, humidVal):
-    
-#     timeFmt = timeVal.strftime("%d %m %y %H:%M")  
-#     tempFmt = np.around(tempVal, decimals=1)
-#     humidFmt = np.around(humidVal, decimals=1) 
-
-#     # formats time for command line output
-#     timeFmtTmp = timeVal.strftime("%H:%M")
-
-#     print("Time:",timeFmtTmp," Temp:",tempFmt," Humid:",humidFmt)
-
-#     return timeFmt, tempFmt, humidFmt
-
-    
+    # update the plot and pause for x seconds
+    plt.pause(0.01)
 
 # MAIN #############################################################################
 
-# # creates the figure window and axes for the plots
-# plt.ion()
-# fig, axes = plt.subplots(nrows=2, ncols=1)
+# max data elements to store
+# 4032 = 2 weeks worth of data at 5 min intervals
+dataLenMax = 4032
 
-# # global variables
-# timeArr = []
-# tempArr = []
-# humidArr = []
+# global variables
+timeArr = []
+tempArr = []
+humidArr = []
 
-# # max data elements to store
-# # 4032 = 2 weeks worth of data at 5 min intervals
-# dataLenMax = 4032
-
-# print info
-print('PI-ENVIRO')
-print('-'*50)
-print('TH Sensor')
-print('\tDevice     : SHT-21')
-print('\tInterface  : I2C')
-print('Display')
-
-# get the oled device info??
-device = get_device()
-
+# initialise variables
 readFlg = True
 lastSec = 0
 lastRdTime = '--:--'
 tempData = '--'
 humidData = '--'
+
+# creates the figure window and axes for the plots
+plt.ion()
+fig, axes = plt.subplots(nrows=2, ncols=1)
+
+# print info
+print('PI-ENVIRO')
+print('-'*50)
+print('TH Sensor')
+print('\tDevice     : sht-21')
+print('\tInterface  : i2c')
+print('Display')
+
+# opens the oled device and print some sys info
+device = get_device()
 
 # inf loop
 while True: 
@@ -189,9 +124,13 @@ while True:
 
     # only updates oled display when delta time = 1s
     if currSec != lastSec:
+        
         # updates lastSec with current second value
         lastSec = currSec 
         dispRefresh(timeStamp,lastRdTime,tempData,humidData)
+        
+        # update the plot and pause for x seconds
+        plt.pause(0.01)
 
     # only read the sensor once every x minutes
     if (currMin % 2)==0: 
@@ -207,27 +146,22 @@ while True:
 
             # set the flag to false so it doesn't read twice in the same minute
             readFlg=False
+
+            # formats time for plots
+            timePlotFmt = timeStamp.strftime("%d %m %y %H:%M")
+
+            # saves the data into a global array
+            timeArr.append(timePlotFmt)
+            tempArr.append(float(tempData))
+            humidArr.append(float(humidData))
+
+            # limits data length
+            if len(tempArr) > dataLenMax:
+                timeArr = timeArr[1:(dataLenMax+1)]
+                tempArr = tempArr[1:(dataLenMax+1)]
+                humidArr = humidArr[1:(dataLenMax+1)]
+
+            # plot the data
+            plotData(fig, axes, timeArr, tempArr, humidArr)
     else:
         readFlg=True
-
-    # format time / temp / humid and print result to screen
-    # timeFmt, tempFmt, humidFmt = fmtData(timeData, tempData, humidData)
-
-    # # saves the data into a global array
-    # timeArr.append(timeFmt)
-    # tempArr.append(tempFmt)
-    # humidArr.append(humidFmt)
-
-    # # limits data length
-    # if len(tempArr) > dataLenMax:
-    #     timeArr = timeArr[1:(dataLenMax+1)]
-    #     tempArr = tempArr[1:(dataLenMax+1)]
-    #     humidArr = humidArr[1:(dataLenMax+1)]
-
-    # # plot the data and pause
-    # plotData(fig, axes, timeArr, tempArr, humidArr)
-
-    # displays the current time on the oled, pauses
-    # execution until an interval time length has been
-    # reached
-    # dispUpdate(timeData, tempFmt, humidFmt)

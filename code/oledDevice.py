@@ -16,10 +16,9 @@ def display_settings(args):
         lib_name = lib_version = 'unknown'
 
     import luma.core
-    version = 'luma.{} {} (luma.core {})'.format(
-        lib_name, lib_version, luma.core.__version__)
 
-    print('\tVersion    : {}'.format(version))
+    print('\tLuma Oled  : luma.{} {}'.format(lib_name, lib_version))
+    print('\tLuma Core  : luma.core {}'.format(luma.core.__version__))
     print('\tDisplay    : {}'.format(args.display))       
     print('\t{}'.format(iface))
     print('\tDimensions : {} x {}'.format(args.width, args.height))
