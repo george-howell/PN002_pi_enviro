@@ -3,9 +3,7 @@
 # Import Libraries
 import matplotlib.pyplot as plt
 import sys
-# import subprocess
-from subprocess import call
-from subprocess import check_output
+import subprocess
 import Adafruit_DHT as dht
 import time as tm
 import datetime as dt
@@ -65,11 +63,16 @@ from luma.core.render import canvas
 #                 draw.text((1, 44), "Temp:  " + lstRdTemp + " degC", fill="yellow")
 #                 draw.text((1, 53), "Humid: " + lstRdHumid + " %", fill="yellow") 
 
+
 # read temp and humidity from SHT-21
 def readSht21():
 
     # call sht21ctl function and read stdout
-    data = check_output("./sht21ctl readall", shell=True)
+    try:
+        data = subprocess.check_output("./sht21ctl readall -nhm", shell=True)                       
+    except subprocess.CalledProcessError:
+        print("ERROR: with sht-21 sensor")
+        sys.exit()
 
     # convert byte to string
     dataTmp = data.decode("utf-8")
@@ -83,20 +86,19 @@ def readSht21():
 
     return (tempData, humidData)
 
+def dispRefresh(timeStamp, lstRdTime, lstRdTemp, lstRdHumid):
 
-# read temp and humidity from DHT-22
-def readDht22():
-
-    # Try to grab a sensor reading.  Use the read_retry method which will retry up
-    # to 15 times to get a sensor reading (waiting 2 seconds between each retry).
-    humidData, tempData = dht.read_retry(22, 4)
-
-    if humidData is not None and tempData is not None:   	       
-        return (tempData, humidData)
-    else:
-        print('Failed to get reading, or over limits. Trying again!')
-        tm.sleep(2)
-        return readDht22()
+    # formats time and date for the display
+    currTime = timeStamp.strftime("%H:%M:%S")
+    currDate = timeStamp.strftime("%d %b %y")         
+    
+    with canvas(device) as draw:
+        draw.text((1, 0), "Date:  " + currDate, fill="yellow")
+        draw.text((1, 9), "Time:  " + currTime, fill="yellow") 
+        draw.text((32, 24), "Last Reading", fill="yellow")
+        draw.text((1, 35), "Time:  " + lstRdTime, fill="yellow")
+        draw.text((1, 44), "Temp:  " + lstRdTemp + " degC", fill="yellow")
+        draw.text((1, 53), "Humid: " + lstRdHumid + " %", fill="yellow")
 
 
 # # plot data
@@ -158,38 +160,55 @@ def readDht22():
 # # 4032 = 2 weeks worth of data at 5 min intervals
 # dataLenMax = 4032
 
-# temp humid sensor used ( DHT-22 | SHT-21 )
-thSensor = 'SHT-21'
+# print info
+print('PI-ENVIRO')
+print('-'*50)
+print('TH Sensor')
+print('\tDevice     : SHT-21')
+print('\tInterface  : I2C')
+print('Display')
 
 # get the oled device info??
-# device = get_device()
+device = get_device()
 
-# print info
-print('\nPI-ENVIRO\n')
-print('TH Sensor: ' + thSensor + '\n')
-
-# sleep time before start due to read errors on the i2c bus. not sure why this happens yet.
-tm.sleep(1)
+readFlg = True
+lastSec = 0
+lastRdTime = '--:--'
+tempData = '--'
+humidData = '--'
 
 # inf loop
 while True: 
 
-    # read the temp / humid sensor
-    if (thSensor=='SHT-21'):
-        tempData, humidData = readSht21()
+    # current time
+    timeStamp = dt.datetime.now()
+
+    # current second and min values
+    currSec = int(timeStamp.strftime("%S"))
+    currMin = int(timeStamp.strftime("%M"))       
+
+    # only updates oled display when delta time = 1s
+    if currSec != lastSec:
+        # updates lastSec with current second value
+        lastSec = currSec 
+        dispRefresh(timeStamp,lastRdTime,tempData,humidData)
+
+    # only read the sensor once every x minutes
+    if (currMin % 2)==0: 
+        if (readFlg==True):
+            # read data from sensor
+            tempData, humidData = readSht21()
+
+            # formats date and time for command line output and display
+            lastRdTime = timeStamp.strftime("%H:%M")
+
+            # display time, temp and humid reading to console window
+            print("Time:",lastRdTime," Temp [degC]:",tempData," RH [%]:",humidData)
+
+            # set the flag to false so it doesn't read twice in the same minute
+            readFlg=False
     else:
-        tempData, humidData = readDht22()
-
-    # log the time
-    timeData = dt.datetime.now()
-
-    # formats time for command line output
-    timeFmtCon = timeData.strftime("%H:%M")
-
-    print("Time:",timeFmtCon," Temp [degC]:",tempData," RH [%]:",humidData)
-
-    # temp sleep time
-    tm.sleep(3)
+        readFlg=True
 
     # format time / temp / humid and print result to screen
     # timeFmt, tempFmt, humidFmt = fmtData(timeData, tempData, humidData)
