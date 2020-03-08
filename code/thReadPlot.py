@@ -128,9 +128,6 @@ while True:
         # updates lastSec with current second value
         lastSec = currSec 
         dispRefresh(timeStamp,lastRdTime,tempData,humidData)
-        
-        # update the plot and pause for x seconds
-        plt.pause(0.01)
 
     # only read the sensor once every x minutes
     if (currMin % 2)==0: 
