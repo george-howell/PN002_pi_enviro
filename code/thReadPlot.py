@@ -152,11 +152,18 @@ while True:
             tempArr.append(float(tempData))
             humidArr.append(float(humidData))
 
+            # save data to file - DEBUG!
+            # with open('data.txt', 'a') as f:
+            #     f.write('{}; {}; {}\n'.format(timePlotFmt, tempData, humidData))
+
             # limits data length
             if len(tempArr) > dataLenMax:
                 timeArr = timeArr[1:(dataLenMax+1)]
                 tempArr = tempArr[1:(dataLenMax+1)]
                 humidArr = humidArr[1:(dataLenMax+1)]
+
+            # DEBUG
+            # print(len(timeArr))
 
             # plot the data
             plotData(fig, axes, timeArr, tempArr, humidArr)
