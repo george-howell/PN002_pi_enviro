@@ -53,7 +53,9 @@ def dispRefresh(timeStamp, lstRdTime, lstRdTemp, lstRdHumid):
 
 
 # plot data
-def plotData(fig, axes, timeArr, tempArr, humidArr): 
+def plotData(fig, axes, timeArr, tempArr, humidArr):
+
+    start = tm.perf_counter()
 
     # clears the data on each axis
     axes[0].clear()
@@ -72,23 +74,47 @@ def plotData(fig, axes, timeArr, tempArr, humidArr):
     axes[1].set_xlabel('Date-Time')
     axes[1].set_ylabel('RH [%]')
 
-    # grid
-    axes[0].grid()
-    axes[1].grid()
+    # rotate and align the tick labels so they look better
+    fig.autofmt_xdate()
 
-    # update the plot and pause for x seconds
+    # grid
+    axes[0].grid(True)
+    axes[1].grid(True)
+
+    finish = tm.perf_counter()
+    print(f'Plot format: {round(finish-start,4)} seconds')
+
+def plotUpdate():
+    start = tm.perf_counter()
     plt.pause(0.01)
+    finish = tm.perf_counter()
+    print(f'Plot update: {round(finish-start,4)} seconds')
 
 # MAIN #############################################################################
 
 # max data elements to store
 # 4032 = 2 weeks worth of data at 5 min intervals
-dataLenMax = 4032
+dataLenMax = 10000
 
 # global variables
 timeArr = []
 tempArr = []
 humidArr = []
+
+# global variables - DEBUG
+timeArrTmp = []
+tempArrTmp = []
+humidArrTmp = []
+
+# load debug data - DEBUG
+# with open('data.txt', 'r') as reader:
+#     for ni in range(1000):
+#         data = reader.readline()
+#         [dateTime1, temp, humid] = data.split("; ")
+#         dateTimeFmt = dt.datetime.strptime(dateTime1, "%Y-%m-%d %H:%M:%S.%f")
+#         timeArrTmp.append(dateTimeFmt)
+#         tempArrTmp.append(float(temp))
+#         humidArrTmp.append(float(humid))
 
 # initialise variables
 readFlg = True
@@ -98,7 +124,7 @@ tempData = '--'
 humidData = '--'
 
 # creates the figure window and axes for the plots
-plt.ion()
+# plt.ion()
 fig, axes = plt.subplots(nrows=2, ncols=1)
 
 # print info
@@ -141,20 +167,14 @@ while True:
             # display time, temp and humid reading to console window
             print("Time:",lastRdTime," Temp [degC]:",tempData," RH [%]:",humidData)
 
-            # set the flag to false so it doesn't read twice in the same minute
-            readFlg=False
-
-            # formats time for plots
-            timePlotFmt = timeStamp.strftime("%d %m %y %H:%M")
-
             # saves the data into a global array
-            timeArr.append(timePlotFmt)
+            timeArr.append(timeStamp)
             tempArr.append(float(tempData))
             humidArr.append(float(humidData))
 
             # save data to file - DEBUG!
-            # with open('data.txt', 'a') as f:
-            #     f.write('{}; {}; {}\n'.format(timePlotFmt, tempData, humidData))
+            with open('data.txt', 'a') as f:
+                f.write('{}; {}; {}\n'.format(timeStamp, tempData, humidData))
 
             # limits data length
             if len(tempArr) > dataLenMax:
@@ -163,9 +183,14 @@ while True:
                 humidArr = humidArr[1:(dataLenMax+1)]
 
             # DEBUG
-            # print(len(timeArr))
+            print(len(timeArr))
 
             # plot the data
             plotData(fig, axes, timeArr, tempArr, humidArr)
+            # plotData(fig, axes, timeArrTmp, tempArrTmp, humidArrTmp)
+            plotUpdate()
+
+            # set the flag to false so it doesn't read twice in the same minute
+            readFlg=False
     else:
         readFlg=True
