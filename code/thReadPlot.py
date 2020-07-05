@@ -55,8 +55,6 @@ def dispRefresh(timeStamp, lstRdTime, lstRdTemp, lstRdHumid):
 # plot data
 def plotData(fig, axes, timeArr, tempArr, humidArr):
 
-    start = tm.perf_counter()
-
     # clears the data on each axis
     axes[0].clear()
     axes[1].clear()
@@ -81,15 +79,6 @@ def plotData(fig, axes, timeArr, tempArr, humidArr):
     axes[0].grid(True)
     axes[1].grid(True)
 
-    finish = tm.perf_counter()
-    print(f'Plot format: {round(finish-start,4)} seconds')
-
-def plotUpdate():
-    start = tm.perf_counter()
-    plt.pause(0.01)
-    finish = tm.perf_counter()
-    print(f'Plot update: {round(finish-start,4)} seconds')
-
 # MAIN #############################################################################
 
 # max data elements to store
@@ -105,16 +94,6 @@ humidArr = []
 timeArrTmp = []
 tempArrTmp = []
 humidArrTmp = []
-
-# load debug data - DEBUG
-# with open('data.txt', 'r') as reader:
-#     for ni in range(1000):
-#         data = reader.readline()
-#         [dateTime1, temp, humid] = data.split("; ")
-#         dateTimeFmt = dt.datetime.strptime(dateTime1, "%Y-%m-%d %H:%M:%S.%f")
-#         timeArrTmp.append(dateTimeFmt)
-#         tempArrTmp.append(float(temp))
-#         humidArrTmp.append(float(humid))
 
 # initialise variables
 readFlg = True
@@ -182,13 +161,9 @@ while True:
                 tempArr = tempArr[1:(dataLenMax+1)]
                 humidArr = humidArr[1:(dataLenMax+1)]
 
-            # DEBUG
-            print(len(timeArr))
-
             # plot the data
             plotData(fig, axes, timeArr, tempArr, humidArr)
-            # plotData(fig, axes, timeArrTmp, tempArrTmp, humidArrTmp)
-            plotUpdate()
+            plt.pause(0.01)
 
             # set the flag to false so it doesn't read twice in the same minute
             readFlg=False
