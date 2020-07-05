@@ -153,7 +153,7 @@ while True:
 
             # save data to file - DEBUG!
             with open('data.txt', 'a') as f:
-                f.write('{}; {}; {}\n'.format(timeStamp, tempData, humidData))
+                f.write('{}; Temp: {}; RH: {}\n'.format(timeStamp, tempData, humidData))
 
             # limits data length
             if len(tempArr) > dataLenMax:
